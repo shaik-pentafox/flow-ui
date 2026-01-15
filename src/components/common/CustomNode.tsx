@@ -3,18 +3,18 @@ import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { cn } from "@/lib/utils";
 import { ButtonGroup } from "../ui/button-group";
 import { Button } from "../ui/button";
-import { Copy,  Trash } from "lucide-react";
+import { Copy, Trash } from "lucide-react";
 import { Item, ItemContent, ItemDescription, ItemMedia, ItemTitle } from "../ui/item";
 import { DynamicIcon } from "./DynamicIcon";
-import type { CustomNodeData } from "@/pages/FlowBuilder";
+import type { FlowNode } from "@/pages/FlowBuilder";
 
 type CardProps = {
   title: string;
   description?: string;
-  icon?: string;
+  icon?: string | null;
 };
 
-function Card({ title, description, icon}: CardProps) {
+function Card({ title, description, icon }: CardProps) {
   return (
     <Item className="p-0" >
       {icon && (
@@ -31,7 +31,7 @@ function Card({ title, description, icon}: CardProps) {
 }
 
 
-export function CustomNode({ id, data, selected }: CustomNodeData) {
+export function CustomNode({ id, data, selected }: NodeProps<FlowNode>) {
 
   return (
     <div
@@ -46,7 +46,7 @@ export function CustomNode({ id, data, selected }: CustomNodeData) {
         {data?.enableDuplicate && <Button variant="secondary" className="p-0 " onClick={() => data?.onDuplicate?.(id)}> <Copy size={10} /> </Button>}
         <Button variant="secondary" className="p-0 " onClick={() => data?.onDelete?.(id)}> <Trash size={10} className="text-destructive" /> </Button>
       </ButtonGroup>
-      
+
       <Card
         title={data?.title}
         description={data?.description}

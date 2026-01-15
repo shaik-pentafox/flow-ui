@@ -206,17 +206,30 @@ export function FlowBuilder() {
 
       const reactFlowBounds = reactFlowWrapper.getBoundingClientRect();
 
-      // Get the starting position from activatorEvent
-      const activatorEvent = event.activatorEvent as MouseEvent | PointerEvent;
+      // Use the dragged element's rect instead of the cursor position
+      // @ts-ignore - dnd-kit typings might not fully expose active.rect in all versions, or we check if it exists
+      const activeRect = active.rect?.current?.translated;
 
-      // Calculate the final drop position by adding delta
-      const dropX = activatorEvent.clientX + delta.x;
-      const dropY = activatorEvent.clientY + delta.y;
+      let dropX, dropY;
+
+      if (activeRect) {
+        // If we have the exact translated rect of the dragged item
+        dropX = activeRect.left;
+        dropY = activeRect.top;
+      } else {
+        // Fallback to cursor position (less accurate if not centered)
+        const activatorEvent = event.activatorEvent as MouseEvent | PointerEvent;
+        dropX = activatorEvent.clientX + delta.x;
+        dropY = activatorEvent.clientY + delta.y;
+      }
 
       console.log("Drop position:", { dropX, dropY });
       console.log("ReactFlow bounds:", reactFlowBounds);
 
       // Check if drop is within ReactFlow bounds
+      // We check if the CENTER of the dropped item is inside? Or just top-left?
+      // Let's use top-left for simplicity or maybe check intersection. 
+      // Existing logic used top-left.
       const isOverReactFlow = dropX >= reactFlowBounds.left && dropX <= reactFlowBounds.right && dropY >= reactFlowBounds.top && dropY <= reactFlowBounds.bottom;
 
       if (!isOverReactFlow) {
@@ -225,7 +238,6 @@ export function FlowBuilder() {
       }
 
       // Convert screen position to flow position
-      // screenToFlowPosition handles viewport transforms automatically
       const position = screenToFlowPosition({
         x: dropX,
         y: dropY,
@@ -289,7 +301,7 @@ export function FlowBuilder() {
     <DndContext
       sensors={sensors}
       onDragStart={(event) => {
-        setActiveDrag(event.active.data.current);
+        setActiveDrag(event.active.data.current as DragData);
       }}
       onDragEnd={(event) => {
         setActiveDrag(null);
@@ -297,7 +309,7 @@ export function FlowBuilder() {
       }}
       onDragCancel={() => setActiveDrag(null)}
     >
-      <SidebarProvider defaultOpen={true} style={{ "--sidebar-width": "18rem" }} enableSidebarKeyboardShortcut={false}>
+      <SidebarProvider defaultOpen={true} style={{ "--sidebar-width": "18rem" } as React.CSSProperties} enableSidebarKeyboardShortcut={false}>
         <FlowSideBar onAddNode={addNode} />
         <main className="flex flex-col flex-1">
           <div className="flex flex-col m-2 ml-0">

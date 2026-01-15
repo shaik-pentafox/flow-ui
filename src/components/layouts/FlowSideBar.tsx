@@ -4,8 +4,8 @@ import { Item, ItemActions, ItemContent, ItemDescription, ItemMedia, ItemTitle }
 import { ScrollArea } from "../ui/scroll-area";
 import { DynamicIcon } from "../common/DynamicIcon";
 import { Button } from "../ui/button";
-import {  useDraggable } from "@dnd-kit/core";
-import { CSS } from "@dnd-kit/utilities";
+import { useDraggable } from "@dnd-kit/core";
+// import { CSS } from "@dnd-kit/utilities";
 import data from "@/sample.json";
 
 type CardProps = {
@@ -15,13 +15,13 @@ type CardProps = {
 };
 
 function Card({ id, data, onAdd }: CardProps) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id,
     data: data,
   });
 
   const style = {
-    transform: CSS.Translate.toString(transform),
+    // transform: CSS.Translate.toString(transform), // Prevent item from moving in the list
     opacity: isDragging ? 0.5 : 1,
   };
 

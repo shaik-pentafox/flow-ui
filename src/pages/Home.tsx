@@ -1,4 +1,3 @@
-import { DynamicIcon } from "@/components/common/DynamicIcon";
 import { Group } from "@/components/common/Group";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
