@@ -7,6 +7,7 @@ import App from './App.tsx'
 import './index.css'
 import { apiCall, apiCallProtected, apiCallFileProtected } from '@/api/config.ts'
 import { setupAllInterceptors } from '@/api/interceptor.ts'
+import { Toaster } from '@/components/ui/sonner.tsx'
 // Initialize the API interceptors
 setupAllInterceptors(apiCall, apiCallProtected, apiCallFileProtected);
 
@@ -14,6 +15,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <Toaster />
         <App />
       </ThemeProvider>
     </BrowserRouter>

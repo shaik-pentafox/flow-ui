@@ -1,12 +1,50 @@
-import type { CustomNodeData } from "@/pages/FlowBuilder";
+// src/lib/buildExecutionOrder.ts
+import type { CustomNodeData } from "@/pages/Builder";
 import type { Node, Edge } from "@xyflow/react";
 
 type Output = {
   id: number;
   order: number;
+  api_type?: string;
+  redirect_url?: string;
+  poll_interval?: number;
+  poll_max_attempts?: number;
 };
 
-export function buildExecutionOrder(nodes: Node<CustomNodeData>[], edges: Edge[]): Output[] {
+function buildNodePayload(node: Node<CustomNodeData>, order: number): Output {
+  const base: Output = {
+    id: node.data.id,
+    order,
+  };
+
+  // API type specific enrichment
+  switch (node.data.type) {
+    case "redirect":
+      return {
+        ...base,
+        api_type: "redirects",
+        redirect_url: node.data.redirect_url,
+      };
+
+    case "pooling":
+      return {
+        ...base,
+        api_type: "pooling",
+        poll_interval: node.data.poll_interval,
+        poll_max_attempts: node.data.poll_max_attempts,
+      };
+
+    default:
+      return base;
+  }
+}
+
+export function buildExecutionOrder(nodes?: Node<CustomNodeData>[] | null, edges?: Edge[] | null): Output[] {
+  // 🔒 Guard: execute only if flow is valid
+  if (!nodes?.length) return [];
+
+  const safeEdges = edges ?? [];
+
   // Map react-flow-id -> node
   const nodeMap = new Map<string, Node<CustomNodeData>>();
   nodes.forEach((n) => nodeMap.set(n.id, n));
@@ -20,15 +58,17 @@ export function buildExecutionOrder(nodes: Node<CustomNodeData>[], edges: Edge[]
     inDegree.set(n.id, 0);
   });
 
-  edges.forEach(({ source, target }) => {
+  // 🔒 Defensive edge handling
+  safeEdges.forEach(({ source, target }) => {
+    if (!adj.has(source) || !inDegree.has(target)) return;
+
     adj.get(source)!.push(target);
-    inDegree.set(target, (inDegree.get(target) || 0) + 1);
+    inDegree.set(target, inDegree.get(target)! + 1);
   });
 
-  // Queue of [nodeId, order]
+  // Queue of nodes with no incoming edges
   const queue: Array<{ nodeId: string; order: number }> = [];
 
-  // Start with root nodes (no incoming edges)
   inDegree.forEach((deg, nodeId) => {
     if (deg === 0) {
       queue.push({ nodeId, order: 1 });
@@ -45,14 +85,11 @@ export function buildExecutionOrder(nodes: Node<CustomNodeData>[], edges: Edge[]
     visited.add(nodeId);
 
     const node = nodeMap.get(nodeId);
-    if (!node) continue;
+    if (!node?.data?.id) continue;
 
-    result.push({
-      id: node.data.id,
-      order,
-    });
+    result.push(buildNodePayload(node, order));
 
-    for (const next of adj.get(nodeId) || []) {
+    for (const next of adj.get(nodeId) ?? []) {
       inDegree.set(next, inDegree.get(next)! - 1);
 
       if (inDegree.get(next) === 0) {

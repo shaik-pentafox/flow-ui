@@ -1,13 +1,16 @@
 // src/components/layouts/FlowHeader.tsx
+import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Item, ItemActions, ItemContent, ItemDescription } from "../ui/item";
 import { z } from "zod";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Item, ItemActions, ItemContent, ItemDescription } from "@/components/ui/item";
+
 import type { Edge, Node } from "@xyflow/react";
-import type { CustomNodeData } from "@/pages/FlowBuilder";
+import type { CustomNodeData } from "@/pages/Builder";
 import { buildExecutionOrder } from "@/lib/buildExecutionOrder";
 
 export const flowHeaderSchema = z.object({
@@ -22,22 +25,15 @@ export type ExecutionOrderItem = {
 
 export type FlowHeaderFormValues = z.infer<typeof flowHeaderSchema>;
 
-export type FlowSubmitPayload = FlowHeaderFormValues & {
-  flow?: {
-    nodes: Node<CustomNodeData>[] | null;
-    edges: Edge[] | null;
-  };
-  executionOrder?: ExecutionOrderItem[];
-};
-
 type FlowHeaderProps = {
   title?: string;
   description?: string;
+  isLoading?: boolean;
   flow?: { nodes: Node<CustomNodeData>[] | null; edges: Edge[] | null };
-  onSubmit?: (data: FlowSubmitPayload) => void;
+  onSubmit?: (data: any) => void;
 };
 
-export function FlowHeader({ title, description, flow, onSubmit }: FlowHeaderProps) {
+export function FlowHeader({ title, description, isLoading, flow, onSubmit }: FlowHeaderProps) {
   const {
     register,
     handleSubmit,
@@ -45,20 +41,31 @@ export function FlowHeader({ title, description, flow, onSubmit }: FlowHeaderPro
   } = useForm<FlowHeaderFormValues>({
     resolver: zodResolver(flowHeaderSchema),
     defaultValues: {
-      title: title,
-      description: description,
+      title,
+      description,
     },
   });
 
-  const executionOrder = buildExecutionOrder(flow?.nodes || [], flow?.edges || []);
+  const handleFormSubmit = (data: FlowHeaderFormValues) => {
+    onSubmit?.({
+      ...data,
+      flow,
+    });
+  };
 
-   const handleFormSubmit = (data: FlowHeaderFormValues) => {
-      onSubmit?.({
-        ...data,
-        flow,
-        executionOrder,
-      });
-    };
+  if (isLoading) {
+    return (
+      <Item className="w-full bg-primary-foreground" variant="outline">
+        <ItemContent className="gap-2">
+          <Skeleton className="h-7 w-1/2" />
+          <Skeleton className="h-6 w-3/4" />
+        </ItemContent>
+        <ItemActions>
+          <Skeleton className="h-8 w-28" />
+        </ItemActions>
+      </Item>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)}>
@@ -86,9 +93,11 @@ export function FlowHeader({ title, description, flow, onSubmit }: FlowHeaderPro
         </ItemContent>
 
         <ItemActions>
-          <Button type="submit" variant="outline" size="sm">
-            Generated Flow
-          </Button>
+          {flow?.nodes && (
+            <Button type="submit" variant="outline" size="sm">
+              Generated Flow
+            </Button>
+          )}
         </ItemActions>
       </Item>
     </form>

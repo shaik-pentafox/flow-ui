@@ -1,34 +1,32 @@
 // src/components/layouts/SideBar.tsx
-import { Home, Inbox } from "lucide-react"
-
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarTrigger,
-} from "@/components/ui/sidebar"
-import { NavLink } from "react-router-dom"
-import { cn } from "@/lib/utils"
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarTrigger } from "@/components/ui/sidebar";
+import { NavLink } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import { DynamicIcon } from "../common/DynamicIcon";
 
 // Menu items.
 const items = [
   {
     title: "Home",
     url: "/",
-    icon: Home,
+    icon: "Home",
+  },
+  {
+    title: "Flow",
+    url: "/flows",
+    icon: "Waves",
+  },
+  {
+    title: "Features",
+    url: "/features",
+    icon: "Blocks",
   },
   {
     title: "Inbox",
     url: "/inbox",
-    icon: Inbox,
-  }
-]
+    icon: "Inbox",
+  },
+];
 
 export function SideBar() {
   return (
@@ -42,10 +40,8 @@ export function SideBar() {
                 <NavLink key={item.title} to={item.url} end>
                   {({ isActive }) => (
                     <SidebarMenuItem>
-                      <SidebarMenuButton
-                        className={cn("w-full",isActive && "bg-sidebar-accent text-sidebar-accent-foreground")}
-                      >
-                        <item.icon />
+                      <SidebarMenuButton className={cn("w-full", isActive && "bg-sidebar-accent text-sidebar-accent-foreground")}>
+                        <DynamicIcon name={item.icon} />
                         <span>{item.title}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -58,13 +54,13 @@ export function SideBar() {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-        <SidebarMenuItem >
-          <SidebarMenuButton asChild>
-            <SidebarTrigger label="Toggle Sidebar"  />
-          </SidebarMenuButton>
-        </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <SidebarTrigger label="Toggle Sidebar" />
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }
