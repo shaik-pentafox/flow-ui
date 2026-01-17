@@ -56,7 +56,7 @@ function Card({ id, data, onAdd }: CardProps) {
       </ItemMedia>
       <ItemContent>
         <ItemTitle className="text-xs">{data.title}</ItemTitle>
-        <ItemDescription className="text-[12px]">{data.description}</ItemDescription>
+        <ItemDescription className="text-[12px]">{data.description || data.feature_description}</ItemDescription>
       </ItemContent>
       <ItemActions>
         <Button size="icon" variant="outline" className="scale-80" onClick={onAdd}>
@@ -67,8 +67,9 @@ function Card({ id, data, onAdd }: CardProps) {
   );
 }
 
-export function FlowSideBar({ data = [], isLoading, error, onAddNode }: { data: any[]; isLoading?: boolean; error?: any; onAddNode: (data: any, position: { x: number; y: number }) => void }) {
+export function FlowSideBar({ data = [], isLoading, error, onAddNode }: { data: any[] | undefined; isLoading?: boolean; error?: any; onAddNode: (data: any, position: { x: number; y: number }) => void }) {
   const [search, setSearch] = useState("");
+
 
   const groupedData = useMemo(() => {
     return data.reduce((acc: Record<string, any[]>, item) => {
@@ -106,7 +107,7 @@ export function FlowSideBar({ data = [], isLoading, error, onAddNode }: { data: 
     }
 
     if (!items.length) {
-      return <div className="text-xs text-muted-foreground text-center py-4">{error || "No items"}</div>;
+      return <div className="text-xs text-muted-foreground text-center py-4">{error || error.message || "No items"}</div>;
     }
 
     return items.map((item) => <Card key={item.id} id={`feature-${item.id}`} data={item} onAdd={() => onAddNode(item, { x: 120, y: 120 })} />);
@@ -119,11 +120,11 @@ export function FlowSideBar({ data = [], isLoading, error, onAddNode }: { data: 
       </SidebarHeader>
       <SidebarContent className="overflow-hidden h-full">
         <SidebarGroup className="h-full flex flex-col">
-          <Tabs defaultValue="All" className="h-full flex flex-col">
+          <Tabs defaultValue="All" className="h-full flex">
             {/* FIXED TABS HEADER */}
-            <TabsList className="  pt-[6px] ">
+            <TabsList className="h-9 p-0 px-1 !scrollbar-hide">
               {tabs.map((tab) => (
-                <TabsTrigger key={tab} value={tab}>
+                <TabsTrigger key={tab} value={tab} className="h-6 ">
                   {tab}
                 </TabsTrigger>
               ))}
@@ -131,7 +132,7 @@ export function FlowSideBar({ data = [], isLoading, error, onAddNode }: { data: 
 
             {/* SCROLLABLE CONTENT */}
             {/* <div className="flex-1 overflow-hidden"> */}
-            <ScrollArea className="h-full overflow-x-hidden">
+            <ScrollArea className="h-full pr-2 -mr-2 overflow-x-hidden">
               {/* ALL TAB */}
               <TabsContent value="All" className="mt-2">
                 {renderCards(allItems)}
