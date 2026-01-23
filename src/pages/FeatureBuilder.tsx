@@ -1,11 +1,14 @@
 // src/pages/FeatureBuilder.tsx
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { getAPIList, postFeature } from "@/services/auth.service";
+import { getAPIList, getFeatureById, postFeature } from "@/services/auth.service";
 
 import { Builder } from "./Builder";
 import { buildExecutionOrder } from "@/lib/buildExecutionOrder";
 import { toast } from "sonner";
-import { useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
+import { buildFlowFromExecutionOrder } from "@/lib/buildFlowFromExecutionOrder";
+import { useEffect } from "react";
+import { is } from "zod/v4/locales";
 
 type APIs = {
   id: string;
@@ -23,7 +26,8 @@ export type FeatureBuilderProps = {
 
 export function FeatureBuilder() {
   const navigate = useNavigate();
-  
+  const { id } = useParams();
+
   const { data, isLoading, error } = useQuery({
     queryKey: ["api-lists"],
     queryFn: getAPIList,
@@ -37,8 +41,20 @@ export function FeatureBuilder() {
           description: item.feature_description,
         })),
   });
+  console.log(data, isLoading, error, "---apiListData--->");
 
-  console.log(data?.[0], isLoading, error);
+  const { data: featData, isLoading: isFeatLoading } = useQuery({
+    queryKey: ["flow-by-id", id],
+    queryFn: () => getFeatureById(id as string),
+    select: (data) => data?.data,
+    enabled: !!id,
+  });
+  console.log(featData, isFeatLoading, id, "---featureFlowData--->");
+
+  const displayTitle = featData?.name ?? "New Feature";
+  const displayDescription = featData?.description ?? "Feature Description";
+  const defaultFlows = featData?.features && buildFlowFromExecutionOrder({ data: featData?.features, type: "api" });
+  console.log(defaultFlows, "---Default Feature Flow--->");
 
   const createFeature = useMutation({
     mutationFn: (body: any) => postFeature(body),
@@ -48,7 +64,7 @@ export function FeatureBuilder() {
     },
     onError: (error: any) => {
       toast.error(error.message || "Failed to create feature");
-    }
+    },
   });
 
   const handleCreateFeature = (featureData: any) => {
@@ -60,10 +76,20 @@ export function FeatureBuilder() {
       apis: ExecutionOrderItem,
     };
 
-    console.log("Feature Data:", featureDataPayload);
+    console.log("Mutate Feature Data:", featureDataPayload);
 
     createFeature.mutate(featureDataPayload);
   };
 
-  return <Builder data={data} isLoading={isLoading || createFeature.isPending} error={error} title={"New Feature"} description={"Feature Description"} onGenerate={handleCreateFeature} />;
+  return (
+    <Builder
+      data={data}
+      isLoading={isLoading || createFeature.isPending || isFeatLoading}
+      error={error}
+      title={displayTitle}
+      description={displayDescription}
+      onGenerate={handleCreateFeature}
+      defaultFlow={defaultFlows}
+    />
+  );
 }

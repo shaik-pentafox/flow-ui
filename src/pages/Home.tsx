@@ -8,6 +8,7 @@ import { jwtDecode } from "jwt-decode";
 import { toast } from "sonner";
 import { useAuthStore } from "@/store/authStore";
 import { env } from "@/config";
+import { ModeToggle } from "@/components/common/ModeToggle";
 
 export function Home() {
   const { login } = useAuthStore.getState();
@@ -36,11 +37,15 @@ export function Home() {
   return (
     <div>
       <Group position="apart">
-        <h2>Welcome to the Home Page</h2>
-        <Button onClick={() => loginMutation.mutate({ name: env.DEMO_USER, password: env.DEMO_PASSWORD })}>Authenticate</Button>
-        <Button onClick={() => navigate("/flow-builder")} variant="secondary">
-          Flow Builder
-        </Button>
+        <h2 className="text-xl font-semibold tracking-tight text-sidebar-accent-foreground">Dashboard</h2>
+        {/* <Button onClick={() => loginMutation.mutate({ name: env.DEMO_USER, password: env.DEMO_PASSWORD })} variant="outline">Authenticate</Button> */}
+        <div className="flex items-center gap-2">
+          <Button onClick={() => navigate("/flow-builder")} variant="secondary">
+            Flow Builder
+          </Button>
+
+          <ModeToggle />
+        </div>
       </Group>
     </div>
   );

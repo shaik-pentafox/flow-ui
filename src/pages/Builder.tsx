@@ -1,5 +1,5 @@
 // src/pages/Builder.tsx
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { ReactFlow, applyNodeChanges, applyEdgeChanges, addEdge, Background, BackgroundVariant, Controls, MiniMap, useReactFlow } from "@xyflow/react";
 import type { Node, Edge, NodeChange, EdgeChange, Connection, NodeTypes } from "@xyflow/react";
 import { CustomNode } from "@/components/common/CustomNode";
@@ -15,6 +15,7 @@ import { DynamicIcon } from "@/components/common/DynamicIcon";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 import type { FeatureBuilderProps } from "./FeatureBuilder";
 import { APINode } from "@/components/common/APINode";
+import { de } from "zod/v4/locales";
 
 // Type
 
@@ -97,6 +98,7 @@ export function Builder({
   title,
   description,
   onGenerate,
+  defaultFlow,
 }: {
   data?: any[];
   isLoading?: boolean;
@@ -104,11 +106,12 @@ export function Builder({
   title?: string;
   description?: string;
   onGenerate?: (featureData: FeatureBuilderProps) => void;
+  defaultFlow?: { nodes: Node<CustomNodeData>[]; edges: Edge[] };
 }) {
-  const [nodes, setNodes] = useState<Node<CustomNodeData>[]>(initialNodes);
-  const [edges, setEdges] = useState<Edge[]>(initialEdges);
+  const [nodes, setNodes] = useState<Node<CustomNodeData>[]>(defaultFlow?.nodes ?? initialNodes);
+  const [edges, setEdges] = useState<Edge[]>(defaultFlow?.edges ?? initialEdges);
   const [activeDrag, setActiveDrag] = useState<DragData | null>(null);
-  const { theme: colorMode } = useTheme();
+  const { resolvedTheme } = useTheme();
   const { screenToFlowPosition } = useReactFlow();
   const { setNodeRef } = useDroppable({ id: "flow-canvas" });
 
@@ -119,6 +122,14 @@ export function Builder({
     }),
     []
   );
+
+  // Load default flow if provided
+  useEffect(() => {
+    if (defaultFlow) {
+      setNodes(defaultFlow.nodes);
+      setEdges(defaultFlow.edges);
+    }
+  }, [defaultFlow]);
 
   // DnD Kit Sensors
   const sensors = useSensors(
@@ -298,6 +309,18 @@ export function Builder({
     [addNode, screenToFlowPosition]
   );
 
+  const nodesWithActions = useMemo(() => {
+    return nodes.map((node) => ({
+      ...node,
+      data: {
+        ...node.data,
+        onDelete: deleteNode,
+        onDuplicate: duplicateNode,
+        onUpdate: updateNodeData,
+      },
+    }));
+  }, [nodes, deleteNode, duplicateNode, updateNodeData]);
+
   return (
     <DndContext
       sensors={sensors}
@@ -329,15 +352,15 @@ export function Builder({
           </div>
           <div className="flex-1 reactflow-wrapper" ref={setNodeRef}>
             <ReactFlow
-              nodes={nodes}
-              // nodes={nodesWithActions}
+              // nodes={nodes}
+              nodes={nodesWithActions}
               edges={edges}
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
               nodeTypes={nodeTypesMap}
               fitView
-              colorMode={colorMode}
+              colorMode={resolvedTheme }
               defaultEdgeOptions={edgeOptions}
               onEdgeDoubleClick={onEdgeDoubleClick}
               maxZoom={1.3}
@@ -346,9 +369,10 @@ export function Builder({
               // selectionOnDrag={true}
               panOnDrag={!activeDrag}
               selectionOnDrag={!activeDrag}
+              proOptions={{ hideAttribution: true }}
             >
               <Controls className="rounded-sm overflow-hidden border shadow-md" />
-              <MiniMap />
+              <MiniMap pannable zoomable style={{ width: 160, height: 120 }} />
               <Background variant={BackgroundVariant.Dots} gap={12} size={1} bgColor="var(--background)" />
             </ReactFlow>
           </div>

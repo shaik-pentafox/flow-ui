@@ -30,14 +30,14 @@ const applyInterceptors = (instance: AxiosInstance, isProtected: boolean = true)
         }
         return config;
       },
-      (error) => Promise.reject(error)
+      (error) => Promise.reject(error),
     );
   }
 
   // ⬅️ Response Interceptor: Normalize response data and handle errors
   instance.interceptors.response.use(
     (response: AxiosResponse) => {
-      console.log(response)
+      // console.log(response);
       if (response.status === 200 || response.status === 201) {
         return response.data;
       }
@@ -48,8 +48,7 @@ const applyInterceptors = (instance: AxiosInstance, isProtected: boolean = true)
     },
     async (error: AxiosError) => {
       const authObj = useAuthStore.getState().token;
-      const logout = () => console.log("simulating logout");
-      // const logout = useAuthStore.getState().logout;
+      const logout = useAuthStore.getState().logout;
 
       /* 401 handling */
       if (isProtected && error.response?.status === 401 && authObj) {
@@ -83,48 +82,8 @@ const applyInterceptors = (instance: AxiosInstance, isProtected: boolean = true)
         message: responseData?.message || responseData?.error || "Request failed",
         status: error.response.status,
       });
-    }
+    },
   );
-  // instance.interceptors.response.use(
-  //   (response: AxiosResponse) => {
-  //     // Normalize successful responses (based on your original logic)
-  //     if (response.status === 200 || response.status === 201) {
-  //       return response.data; // Return the actual server response body
-  //     } else if (response.status === 204) {
-  //       return { status: "success", message: "No Content" };
-  //     }
-  //     return response;
-  //   },
-  //   async (error: AxiosError) => {
-  //     // const authToken = useAuthStore.getState().token;
-  //     const authToken = "20202020";
-  //     const logout = () => console.log("simulating function");
-  //     // const logout = useAuthStore.getState().logout;
-  //     // Handle 401 Unauthorized (Token Expired) - Only for protected calls
-  //     if (isProtected && error.response?.status === 401 && authToken) {
-  //       logout();
-  //       // Reject with a clear, normalized error message
-  //       return Promise.reject<NormalizedErrorBody>({
-  //         message: "Session expired. Please login again.",
-  //         status: 401,
-  //       });
-  //     }
-
-  //     // 💡 Normalize error response
-  //     const responseData: any = error.response?.data;
-
-  //     if (responseData && typeof responseData === "object" && responseData.message) {
-  //       // Server returned a structured error body
-  //       return Promise.reject<NormalizedErrorBody>(responseData);
-  //     } else {
-  //       // Network error, CORS, or unknown error structure
-  //       return Promise.reject<NormalizedErrorBody>({
-  //         message: error.message || "A network error occurred or server is unavailable.",
-  //         status: error.response?.status || 0, // Use 0 for unknown status
-  //       });
-  //     }
-  //   }
-  // );
 };
 
 /**

@@ -1,6 +1,6 @@
 // src/App.tsx
 import QueryProvider from "@/api/QueryProvider"
-import { AppRoutes } from "./components/AppRoutes"
+import { AppRoutes } from "./routes/AppRoutes"
 import { useThemeShortcut } from "./hooks/useThemeShortcut"
 import { ReactFlowProvider } from "@xyflow/react"
 

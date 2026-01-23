@@ -1,5 +1,4 @@
 // src/components/layouts/FlowHeader.tsx
-import { useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -11,7 +10,7 @@ import { Item, ItemActions, ItemContent, ItemDescription } from "@/components/ui
 
 import type { Edge, Node } from "@xyflow/react";
 import type { CustomNodeData } from "@/pages/Builder";
-import { buildExecutionOrder } from "@/lib/buildExecutionOrder";
+import { useEffect } from "react";
 
 export const flowHeaderSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters").max(100, "Title is too long"),
@@ -38,6 +37,7 @@ export function FlowHeader({ title, description, isLoading, flow, onSubmit }: Fl
     register,
     handleSubmit,
     formState: { errors },
+    reset
   } = useForm<FlowHeaderFormValues>({
     resolver: zodResolver(flowHeaderSchema),
     defaultValues: {
@@ -45,6 +45,15 @@ export function FlowHeader({ title, description, isLoading, flow, onSubmit }: Fl
       description,
     },
   });
+
+  useEffect(() => {
+    if (title || description) {
+      reset({
+        title: title ?? "",
+        description: description ?? "",
+      });
+    }
+  }, [title, description, reset]);
 
   const handleFormSubmit = (data: FlowHeaderFormValues) => {
     onSubmit?.({
@@ -55,7 +64,7 @@ export function FlowHeader({ title, description, isLoading, flow, onSubmit }: Fl
 
   if (isLoading) {
     return (
-      <Item className="w-full bg-primary-foreground" variant="outline">
+      <Item className="w-full bg-card" variant="outline">
         <ItemContent className="gap-2">
           <Skeleton className="h-7 w-1/2" />
           <Skeleton className="h-6 w-3/4" />
@@ -69,14 +78,14 @@ export function FlowHeader({ title, description, isLoading, flow, onSubmit }: Fl
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)}>
-      <Item className="w-full bg-primary-foreground" variant="outline">
+      <Item className="w-full bg-card" variant="outline">
         <ItemContent className="gap-1">
           {/* Title */}
           <ItemDescription>
             <Input
               placeholder="Title.."
               {...register("title")}
-              className="h-7 w-1/2 !bg-transparent border-1 border-transparent hover:border-ring transition-border !text-lg !px-2 !py-0 font-medium text-foreground !shadow-none !ring-0 !ring-offset-0"
+              className="h-7 w-1/2 !bg-transparent border-1 border-transparent dark:border-transparent hover:border-ring transition-border !text-lg !px-2 !py-0 font-medium text-foreground !shadow-none !ring-0 !ring-offset-0"
             />
             {errors.title && <p className="text-xs text-destructive mt-1">{errors.title.message}</p>}
           </ItemDescription>
@@ -86,7 +95,7 @@ export function FlowHeader({ title, description, isLoading, flow, onSubmit }: Fl
             <Input
               placeholder="Description.."
               {...register("description")}
-              className="h-7 !bg-transparent border-1 border-transparent hover:border-ring transition-border !px-2 !py-0 text-muted-foreground !shadow-none !ring-0 !ring-offset-0"
+              className="h-7 !bg-transparent border-1 border-transparent dark:border-transparent hover:border-ring transition-border !px-2 !py-0 text-muted-foreground !shadow-none !ring-0 !ring-offset-0"
             />
             {errors.description && <p className="text-xs text-destructive mt-1">{errors.description.message}</p>}
           </ItemDescription>
@@ -94,8 +103,8 @@ export function FlowHeader({ title, description, isLoading, flow, onSubmit }: Fl
 
         <ItemActions>
           {flow?.nodes && (
-            <Button type="submit" variant="outline" size="sm">
-              Generated Flow
+            <Button type="submit" variant="secondary" size="sm">
+              Generated
             </Button>
           )}
         </ItemActions>

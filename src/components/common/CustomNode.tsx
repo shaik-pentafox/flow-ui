@@ -39,9 +39,9 @@ export function CustomNode({ id, data, selected }: NodeProps<FlowNode>) {
   return (
     <div
       className={cn(
-        "relative bg-node text-node-foreground flex flex-col rounded border p-2 min-w-[120px] max-w-[300px] items-center gap-2 scale-90",
-        "hover:shadow-sm shadow-node-accent-foreground/8 transition-shadow",
-        selected && "border-primary/30"
+        "relative bg-card text-foreground flex flex-col rounded border p-2 min-w-[120px] max-w-[300px] items-center gap-2 scale-90",
+        "hover:shadow-sm shadow-accent-foreground/8 transition-shadow",
+        selected && "border-ring"
       )}
     >
       <Handle type="target" position={Position.Top} />
