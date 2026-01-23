@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useAuthStore } from "@/store/authStore";
 import { env } from "@/config";
 import { ModeToggle } from "@/components/common/ModeToggle";
+import { MorphingDialogBasicOne } from "@/components/common/MorphingDialog";
 
 export function Home() {
   const { login } = useAuthStore.getState();
@@ -47,6 +48,9 @@ export function Home() {
           <ModeToggle />
         </div>
       </Group>
+      <div>
+        <MorphingDialogBasicOne />
+      </div>
     </div>
   );
 }

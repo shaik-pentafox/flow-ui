@@ -53,8 +53,6 @@ export function FlowBuilder() {
       feature_flow: ExecutionOrderItem,
     };
 
-    console.log("Mutate Flow Data:", flowDataPayload);
-
     createFlow.mutate(flowDataPayload);
   };
 

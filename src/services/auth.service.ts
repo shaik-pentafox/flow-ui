@@ -40,3 +40,7 @@ export const getFlowById = (flowId: string) => {
 export const getFeatureById = (featId: string) => {
   return apiFetch({ method: "GET", url: `/feature_flow/${featId}` });
 }
+
+export const deleteFlowById = (flowId: string) => {
+  return apiFetch({ method: "DELETE", url: `/flow/${flowId}` });
+}

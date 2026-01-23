@@ -4,17 +4,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { activateFlow, getFlowList } from "@/services/auth.service";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { activateFlow, deleteFlowById, getFlowList } from "@/services/auth.service";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DynamicFormBuilder } from "@/components/common/DynamicFormBuilder";
 import { toast } from "sonner";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { DynamicIcon } from "@/components/common/DynamicIcon";
 import { useState } from "react";
+import { FlowListCard } from "@/components/common/FlowListCard";
 
 function FlowSkeletonGrid() {
   return (
@@ -54,6 +53,7 @@ const fields = [
 
 export function Flow() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [selectedFlow, setSelectedFlow] = useState<any>(null); // Controls Input Dialog
   const [activationResult, setActivationResult] = useState<any>(null); // Controls Result Dialog
@@ -84,12 +84,23 @@ export function Flow() {
     },
   });
 
+  const deleteFlowMutate = useMutation({
+    mutationFn: (flowId: string) => deleteFlowById(flowId),
+    onSuccess: (response: any) => {
+      toast.success(response?.message || "Flow deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["flow-lists"] });
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to delete flow");
+    },
+  });
+
   console.log(activateFlowMutate?.data?.data, "react--->");
 
-  const handleActivateFlow = (flowData: any) => {
-    if (!selectedFlow) return;
+  const handleActivateFlow = (id: string, flowData: any) => {
+    if (!id) return;
     const payload = {
-      flow_id: selectedFlow.id,
+      flow_id: id,
       end_customer_details: {
         name: flowData.name,
         identifier: flowData.identifier,
@@ -97,6 +108,11 @@ export function Flow() {
     };
     console.log(payload);
     activateFlowMutate.mutate(payload);
+  };
+
+  const handleDeleteFlow = (flowId: string) => {
+    console.log(flowId);
+    deleteFlowMutate.mutate(flowId);
   };
 
   const copyToClipboard = (text: string) => {
@@ -150,7 +166,7 @@ export function Flow() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
                     <DropdownMenuItem onClick={() => navigate(`/flow-builder/${item.id}`)}>Update</DropdownMenuItem>
-                    <DropdownMenuItem variant="destructive" disabled>
+                    <DropdownMenuItem variant="destructive" disabled={deleteFlowMutate.isPending} onClick={() => handleDeleteFlow(item.id)}>
                       Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -160,6 +176,18 @@ export function Flow() {
                 </Button>
               </CardFooter>
             </Card>
+          ))}
+          {data.map((item: any) => (
+            <FlowListCard
+              key={item.id}
+              item={item}
+              isActivating={activateFlowMutate.isPending}
+              activationResult={activateFlowMutate.data?.data}
+              onActivate={handleActivateFlow}
+              onUpdate={(id) => navigate(`/flow-builder/${id}`)}
+              onDelete={(id) => deleteFlowMutate.mutate(id)}
+              fields={fields}
+            />
           ))}
         </div>
       )}
@@ -175,7 +203,7 @@ export function Flow() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isResultOpen} onOpenChange={setIsResultOpen}>
+      <Dialog open={false} onOpenChange={setIsResultOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Flow Activated</DialogTitle>
